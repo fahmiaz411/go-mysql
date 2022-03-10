@@ -1,5 +1,13 @@
 sql.Open("driver", "username:password@tcp(localhost:3306)/dbname")
 
+```go
+    func main(){
+
+        fmt.Println("hello sql")
+
+    }
+```
+
 db pooling == connection management
 
 name = root
