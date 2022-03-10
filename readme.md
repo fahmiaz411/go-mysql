@@ -8,6 +8,12 @@ sql.Open("driver", "username:password@tcp(localhost:3306)/dbname")
     }
 ```
 
+result
+
+```
+hello sql
+```
+
 db pooling == connection management
 
 name = root
