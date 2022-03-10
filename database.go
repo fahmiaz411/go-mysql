@@ -1,0 +1,5 @@
+package gomysql
+
+func init() {
+
+}
