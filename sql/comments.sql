@@ -6,4 +6,15 @@ CREATE TABLE comments
     primary key (id)
 ) engine = innodb;
 
+ALTER TABLE comments 
+ADD unique key email (email);
+
+DROP TABLE comments;
+
 SELECT * FROM comments;
+SELECT * FROM comments where email = "repository@test.com";  
+SELECT * FROM comments WHERE id > 110020;
+
+DELETE FROM comments WHERE email = "repository@test.com";
+
+INSERT INTO comments (email, comment) VALUES ("repository@test.com", "a");
