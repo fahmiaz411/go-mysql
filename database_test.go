@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -216,7 +217,7 @@ func TestInsertAutoIncrement(t *testing.T) {
 
 	ctx := context.Background()
 
-	email := "e@gmail.com"
+	email := "eg@gmail.com"
 	comment:="1234"
 
 	query := "INSERT INTO comments(email, comment) VALUES(?, ?)"
@@ -234,4 +235,117 @@ func TestInsertAutoIncrement(t *testing.T) {
 	}
 
 	fmt.Println(id)
+}
+
+func TestPrepareStatement (t *testing.T){
+	db:= GetConnection()
+	defer db.Close()
+
+	ctx:= context.Background()
+	script := "INSERT INTO comments(email, comment) VALUES (? , ?)"
+	statement, err := db.PrepareContext(ctx, script)
+	defer statement.Close()
+
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < 10; i++ {
+		email := "fahmi" + strconv.Itoa(i) + "@gmail.com"
+		comment := "comment ke " + strconv.Itoa(i)
+
+		result, err := statement.ExecContext(ctx, email, comment)
+		if err != nil {
+			panic(err)
+		}
+
+		id, err := result.LastInsertId()
+
+		fmt.Println("Comment id:", id)
+
+	}
+
+}
+
+func TestTransaction (t *testing.T){
+	db := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	tx, err :=  db.Begin()
+
+	if err != nil {
+		panic(err)
+	}
+
+	// do transaction
+	script := "INSERT INTO comments(email, comment) VALUES (? , ?)"
+	stmt, err := tx.PrepareContext(ctx, script)
+	defer stmt.Close()
+
+	for i := 100000; i < 110000; i++ {
+		email := "fahmi" + strconv.Itoa(i) + "@gmail.com"
+		comment := "comment ke " + strconv.Itoa(i)
+		result, err := stmt.ExecContext(ctx, email, comment)
+		
+		if err != nil {
+			panic(err)
+		}
+
+		id, err := result.LastInsertId()
+
+		fmt.Println("Comment id:", id)
+
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+}
+
+func BenchmarkSelect(b *testing.B) {
+	for i:= 0; i < b.N; i++{
+		db := GetConnection()
+		defer db.Close()
+
+		ctx := context.Background()
+
+		script := "SELECT id, email, comment FROM comments WHERE email = ?"
+		stmt, err := db.PrepareContext(ctx, script)
+		defer stmt.Close()
+
+		if err != nil {
+			panic(err)
+		}
+		
+		email := "fahmi105999@gmail.com"
+
+		rows, err := stmt.QueryContext(ctx, email)
+
+		var id int
+		var comment string
+
+		if err != nil {
+			panic(err)
+		}
+
+		if rows.Next() {
+			err := rows.Scan(&id, &email, &comment)
+
+			if err != nil {
+				panic(err)
+			}
+
+		} else {
+			fmt.Println("gagal")
+		}
+
+		fmt.Println("Id:", id)
+		fmt.Println("Email:", email)
+		fmt.Println("Comment:", comment)
+		
+	}
 }
